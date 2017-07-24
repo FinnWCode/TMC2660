@@ -81,7 +81,9 @@ void sendData(unsigned long data){ 
    i_data |= SPI.transfer((data >> 4) & 0xff);  
    i_data <<= 8;  
    i_data |= SPI.transfer((data << 4) & 0xff);
-   /*    i_data |= SPI.transfer((data >> 16) & 0xff);  
+   
+   /*  Are the first or last 4 bits irrelevant?    
+         i_data |= SPI.transfer((data >> 16) & 0xff);  
          i_data <<= 8;  
          i_data |= SPI.transfer((data >> 8) & 0xff);  
          i_data <<= 8;  
