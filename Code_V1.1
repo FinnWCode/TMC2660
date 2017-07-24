@@ -16,8 +16,10 @@
 const byte CLOCKOUT = 11;
 const int  enable   = 17;
 const int  CS       = 24;
+
 const int STEP = 6;
 const int DIR  = 7;
+
 const int motor_steps = 200;
 
 void setup() {    
@@ -42,40 +44,17 @@ void setup() {   
   SPI.begin();
   
   Serial.begin(9600);  
-  while(!Serial){
-  ;
-  }
+  while(!Serial){;}
   Serial.println("Serial laeuft!");    
   
   delay(100);  
   
-  digitalWrite(CS, LOW);  
-  delayMicroseconds(10);  
-  uint8_t one = SPI.transfer(0x901B4);  
-  digitalWrite(CS, HIGH);    
-  delay(100); 
-  
-  digitalWrite(CS, LOW);  
-  delayMicroseconds(10);  
-  uint8_t two = SPI.transfer(0xD001F);  
-  digitalWrite(CS, HIGH);    
-  delay(100);
-  
-  digitalWrite(CS, LOW);  
-  delayMicroseconds(10);  
-  uint8_t three = SPI.transfer(0xE0010);  
-  digitalWrite(CS, HIGH);    
-  delay(100); 
-  
-  digitalWrite(CS, LOW);  
-  delayMicroseconds(10);  
-  uint8_t four  = SPI.transfer(0x00000);  
-  digitalWrite(CS, HIGH);  
-  
-  Serial.println(one, HEX);  
-  Serial.println(two, HEX);  
-  Serial.println(three, HEX);  
-  Serial.println(four,  HEX);}   
+  sendData(0x94557);  
+  sendData(0xD001F);  
+  sendData(0xE0010);  
+  sendData(0x00000);
+  
+  digitalWrite(enable, LOW);
 
 void loop() {  
   for (int i = 0; i < (motor_steps/2); i++){      
@@ -87,3 +66,35 @@ void loop() { 
   Serial.println("Rotation ausgefuehrt?");  
   delay(5000);    
 }
+
+
+void sendData(unsigned long data){  
+   delay(100);  
+   unsigned long i_data;  
+   uint8_t stat;
+   
+   digitalWrite(CS, LOW);  
+   delayMicroseconds(10);
+   
+   i_data |= SPI.transfer((data >> 12) & 0xff);    
+   i_data <<= 8;  
+   i_data |= SPI.transfer((data >> 4) & 0xff);  
+   i_data <<= 8;  
+   i_data |= SPI.transfer((data << 4) & 0xff);
+   /*    i_data |= SPI.transfer((data >> 16) & 0xff);  
+         i_data <<= 8;  
+         i_data |= SPI.transfer((data >> 8) & 0xff);  
+         i_data <<= 8;  
+         i_data |= SPI.transfer((data     ) & 0xff);  
+   */    
+   
+   digitalWrite(CS, HIGH);
+   
+   Serial.print("Received: ");  
+   char tmp[24];  
+   uint16_t LSB = i_data & 0xffff;  
+   uint8_t MSB = i_data >> 16;  
+   sprintf(tmp, "0x%.1X%.4X%", MSB, LSB);  
+   Serial.println(tmp);
+}
+
